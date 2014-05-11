@@ -13,7 +13,8 @@ import org.scalatest.junit.JUnitRunner
  */
 @RunWith(classOf[JUnitRunner])
 class FunSetSuite extends FunSuite {
-
+  val isOdd: (Int) => Boolean = _ % 2 == 1
+  val plusOne: (Int) => Int = _ + 1
 
   /**
    * Link to the scaladoc - very clear and detailed tutorial of FunSuite
@@ -77,6 +78,7 @@ class FunSetSuite extends FunSuite {
     val s1 = singletonSet(1)
     val s2 = singletonSet(2)
     val s3 = singletonSet(3)
+    val s4 = singletonSet(4)
   }
 
   /**
@@ -86,7 +88,7 @@ class FunSetSuite extends FunSuite {
    * Once you finish your implementation of "singletonSet", exchange the
    * function "ignore" by "test".
    */
-  ignore("singletonSet(1) contains 1") {
+  test("singletonSet(1) contains 1") {
     
     /**
      * We create a new instance of the "TestSets" trait, this gives us access
@@ -101,12 +103,56 @@ class FunSetSuite extends FunSuite {
     }
   }
 
-  ignore("union contains all elements") {
+  test("union contains all elements") {
     new TestSets {
       val s = union(s1, s2)
       assert(contains(s, 1), "Union 1")
       assert(contains(s, 2), "Union 2")
       assert(!contains(s, 3), "Union 3")
+    }
+  }
+
+  test("intersect contains only elements which appear in both sets") {
+    new TestSets {
+      assert(contains(intersect(s1, s1), 1), "Intersect 1")
+      assert(!contains(intersect(s1, s1), 2), "Intersect 2")
+      assert(!contains(intersect(s1, s2), 1), "Intersect 3")
+    }
+  }
+
+  test("diff contains elements which appear in set 1 but not set 2") {
+    new TestSets {
+      assert(contains(diff(s1, s2), 1), "Diff 1")
+      assert(!contains(diff(s1, s1), 1), "Diff 2")
+    }
+  }
+
+  test("filter") {
+    new TestSets {
+      assert(contains(filter(singletonSet(5), isOdd), 5), "Filter 1")
+      assert(!contains(filter(singletonSet(4), isOdd), 4), "Filter 2")
+    }
+  }
+
+  test("forall") {
+    new TestSets {
+      assert(forall(s1, isOdd), "forall 1")
+      assert(!forall(s2, isOdd), "forall 2")
+    }
+  }
+
+  test("exists") {
+    new TestSets {
+      assert(exists(union(s1, s2), isOdd), "exists 1")
+      assert(!exists(union(s2, s4), isOdd), "exists 2")
+    }
+  }
+
+  test("map") {
+    new TestSets {
+      assert(contains(map(s1, plusOne), 2), "map 1")
+      println("Blah")
+      assert(!contains(map(s1, plusOne), 1), "map 2")
     }
   }
 }
