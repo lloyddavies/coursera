@@ -2,6 +2,7 @@ package objsets
 
 import common._
 import TweetReader._
+import scala.NoSuchElementException
 
 /**
  * A class to represent tweets.
@@ -42,7 +43,9 @@ abstract class TweetSet {
    * Question: Can we implment this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-  def filter(p: Tweet => Boolean): TweetSet = ???
+  def filter(p: Tweet => Boolean): TweetSet = {
+    filterAcc(p, new Empty)
+  }
 
   /**
    * This is a helper method for `filter` that propagetes the accumulated tweets.
@@ -55,7 +58,12 @@ abstract class TweetSet {
    * Question: Should we implment this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-   def union(that: TweetSet): TweetSet = ???
+  def union(that: TweetSet): TweetSet = {
+    var u: TweetSet = new Empty
+    this.foreach(t => u = u.incl(t))
+    that.foreach(t => u = u.incl(t))
+    u
+  }
 
   /**
    * Returns the tweet from this set which has the greatest retweet count.
@@ -66,7 +74,29 @@ abstract class TweetSet {
    * Question: Should we implment this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-  def mostRetweeted: Tweet = ???
+  def mostRetweeted: Tweet = {
+    var t: Option[Tweet] = None
+
+    foreach {
+      x =>
+        if (t == None || x.retweets > t.get.retweets)
+          t = Some(x)
+    }
+
+    t.getOrElse(throw new NoSuchElementException)
+  }
+
+  def leastRetweeted: Tweet = {
+    var t: Option[Tweet] = None
+
+    foreach {
+      x =>
+        if (t == None || x.retweets < t.get.retweets)
+          t = Some(x)
+    }
+
+    t.getOrElse(throw new NoSuchElementException)
+  }
 
   /**
    * Returns a list containing all tweets of this set, sorted by retweet count
@@ -77,7 +107,26 @@ abstract class TweetSet {
    * Question: Should we implment this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-  def descendingByRetweet: TweetList = ???
+  def descendingByRetweet: TweetList = {
+    var list: TweetList = Nil
+    var set: TweetSet = this
+    var t = leastRetweeted
+
+    try {
+      while (!t.isInstanceOf[Empty]) {
+        //TODO: Tail recursion
+        list = new Cons(t, list)
+        set = set.remove(t)
+
+        t = set.leastRetweeted
+
+      }
+    } catch {
+      case e: NoSuchElementException => ()
+    }
+
+    list
+  }
 
 
   /**
@@ -110,8 +159,9 @@ abstract class TweetSet {
 
 class Empty extends TweetSet {
 
-  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = ???
-
+  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = {
+    new Empty
+  }
 
   /**
    * The following methods are already implemented
@@ -128,8 +178,13 @@ class Empty extends TweetSet {
 
 class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
 
-  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = ???
-
+  def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = {
+    if (p(elem)) {
+      new NonEmpty(elem, left.filter(p), right.filter(p))
+    } else {
+      new Empty
+    }
+  }
 
   /**
    * The following methods are already implemented
