@@ -58,7 +58,12 @@ abstract class TweetSet {
    * Question: Should we implment this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-  def union(that: TweetSet): TweetSet
+  def union(that: TweetSet): TweetSet = {
+    var u: TweetSet = new Empty
+    this.foreach(t => u = u.incl(t))
+    that.foreach(t => u = u.incl(t))
+    u
+  }
 
   /**
    * Returns the tweet from this set which has the greatest retweet count.
@@ -132,14 +137,6 @@ class Empty extends TweetSet {
   }
 
   /**
-   * Returns a new `TweetSet` that is the union of `TweetSet`s `this` and `that`.
-   *
-   * Question: Should we implment this method here, or should it remain abstract
-   * and be implemented in the subclasses?
-   */
-  override def union(that: TweetSet): TweetSet = that
-
-  /**
    * Returns the tweet from this set which has the greatest retweet count.
    *
    * Calling `mostRetweeted` on an empty set should throw an exception of
@@ -174,17 +171,6 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
   def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = {
     val set = if (p(elem)) acc.incl(elem) else acc
     (set union left.filter(p)) union right.filter(p)
-  }
-
-
-  /**
-   * Returns a new `TweetSet` that is the union of `TweetSet`s `this` and `that`.
-   *
-   * Question: Should we implment this method here, or should it remain abstract
-   * and be implemented in the subclasses?
-   */
-  override def union(that: TweetSet): TweetSet = {
-    ((left union right) union that) incl elem
   }
 
 
