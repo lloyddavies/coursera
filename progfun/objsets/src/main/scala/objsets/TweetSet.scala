@@ -58,12 +58,7 @@ abstract class TweetSet {
    * Question: Should we implment this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-  def union(that: TweetSet): TweetSet = {
-    var u: TweetSet = new Empty
-    this.foreach(t => u = u.incl(t))
-    that.foreach(t => u = u.incl(t))
-    u
-  }
+  def union(that: TweetSet): TweetSet
 
   /**
    * Returns the tweet from this set which has the greatest retweet count.
@@ -74,17 +69,7 @@ abstract class TweetSet {
    * Question: Should we implment this method here, or should it remain abstract
    * and be implemented in the subclasses?
    */
-  def mostRetweeted: Tweet = {
-    var t: Option[Tweet] = None
-
-    foreach {
-      x =>
-        if (t == None || x.retweets > t.get.retweets)
-          t = Some(x)
-    }
-
-    t.getOrElse(throw new NoSuchElementException)
-  }
+  def mostRetweeted: Tweet
 
   def leastRetweeted: Tweet = {
     var t: Option[Tweet] = None
@@ -155,6 +140,8 @@ abstract class TweetSet {
    * This method takes a function and applies it to every element in the set.
    */
   def foreach(f: Tweet => Unit): Unit
+
+  def isEmpty: Boolean
 }
 
 class Empty extends TweetSet {
@@ -162,6 +149,25 @@ class Empty extends TweetSet {
   def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = {
     new Empty
   }
+
+  /**
+   * Returns a new `TweetSet` that is the union of `TweetSet`s `this` and `that`.
+   *
+   * Question: Should we implment this method here, or should it remain abstract
+   * and be implemented in the subclasses?
+   */
+  override def union(that: TweetSet): TweetSet = that
+
+  /**
+   * Returns the tweet from this set which has the greatest retweet count.
+   *
+   * Calling `mostRetweeted` on an empty set should throw an exception of
+   * type `java.util.NoSuchElementException`.
+   *
+   * Question: Should we implment this method here, or should it remain abstract
+   * and be implemented in the subclasses?
+   */
+  override def mostRetweeted: Tweet = throw new NoSuchElementException
 
   /**
    * The following methods are already implemented
@@ -174,6 +180,9 @@ class Empty extends TweetSet {
   def remove(tweet: Tweet): TweetSet = this
 
   def foreach(f: Tweet => Unit): Unit = ()
+
+  //TODO: Remove if I can
+  override def isEmpty: Boolean = true
 }
 
 class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
@@ -183,6 +192,38 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
       new NonEmpty(elem, left.filter(p), right.filter(p))
     } else {
       new Empty
+    }
+  }
+
+
+  /**
+   * Returns a new `TweetSet` that is the union of `TweetSet`s `this` and `that`.
+   *
+   * Question: Should we implment this method here, or should it remain abstract
+   * and be implemented in the subclasses?
+   */
+  override def union(that: TweetSet): TweetSet = {
+    ((left union right) union that) incl elem
+  }
+
+
+  /**
+   * Returns the tweet from this set which has the greatest retweet count.
+   *
+   * Calling `mostRetweeted` on an empty set should throw an exception of
+   * type `java.util.NoSuchElementException`.
+   *
+   * Question: Should we implment this method here, or should it remain abstract
+   * and be implemented in the subclasses?
+   */
+  override def mostRetweeted: Tweet = {
+    //TODO: Make nicer
+    if (left.isEmpty && right.isEmpty) {
+      elem
+    } else if (left.isEmpty) {
+      if (elem.retweets > right.mostRetweeted.retweets) elem else right.mostRetweeted
+    } else {
+      if (elem.retweets > left.mostRetweeted.retweets) elem else left.mostRetweeted
     }
   }
 
@@ -211,6 +252,8 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
     left.foreach(f)
     right.foreach(f)
   }
+
+  override def isEmpty: Boolean = false
 }
 
 trait TweetList {
