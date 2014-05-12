@@ -35,6 +35,9 @@ class Tweet(val user: String, val text: String, val retweets: Int) {
  * [1] http://en.wikipedia.org/wiki/Binary_search_tree
  */
 abstract class TweetSet {
+  def head: Tweet
+
+  def isEmpty: Boolean
 
   /**
    * This method takes a predicate and returns a subset of all the elements
@@ -59,10 +62,15 @@ abstract class TweetSet {
    * and be implemented in the subclasses?
    */
   def union(that: TweetSet): TweetSet = {
-    var u: TweetSet = new Empty
-    this.foreach(t => u = u.incl(t))
-    that.foreach(t => u = u.incl(t))
-    u
+    def unionAcc(s1: TweetSet, s2: TweetSet): TweetSet = {
+      if (s1.isEmpty) s2
+      else {
+        val t = s1.head
+        unionAcc(s1.remove(t), s2.incl(t))
+      }
+    }
+
+    unionAcc(this, that)
   }
 
   /**
@@ -126,11 +134,12 @@ abstract class TweetSet {
    * This method takes a function and applies it to every element in the set.
    */
   def foreach(f: Tweet => Unit): Unit
-
-  def isEmpty: Boolean
 }
 
 class Empty extends TweetSet {
+
+
+  override def head: Tweet = throw new NoSuchElementException
 
   def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = {
     new Empty
@@ -167,6 +176,10 @@ class Empty extends TweetSet {
 }
 
 class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
+
+  override def head: Tweet = {
+    if (left.isEmpty) elem else left.head
+  }
 
   def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = {
     val set = if (p(elem)) acc.incl(elem) else acc
