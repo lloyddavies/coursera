@@ -71,17 +71,7 @@ abstract class TweetSet {
    */
   def mostRetweeted: Tweet
 
-  def leastRetweeted: Tweet = {
-    var t: Option[Tweet] = None
-
-    foreach {
-      x =>
-        if (t == None || x.retweets < t.get.retweets)
-          t = Some(x)
-    }
-
-    t.getOrElse(throw new NoSuchElementException)
-  }
+  def leastRetweeted: Tweet
 
   /**
    * Returns a list containing all tweets of this set, sorted by retweet count
@@ -93,24 +83,15 @@ abstract class TweetSet {
    * and be implemented in the subclasses?
    */
   def descendingByRetweet: TweetList = {
-    var list: TweetList = Nil
-    var set: TweetSet = this
-    var t = leastRetweeted
-
-    try {
-      while (!t.isInstanceOf[Empty]) {
-        //TODO: Tail recursion
-        list = new Cons(t, list)
-        set = set.remove(t)
-
-        t = set.leastRetweeted
-
+    def descendingByRetweetAcc(list: TweetList, set: TweetSet): TweetList = {
+      if (set.isEmpty) list
+      else {
+        val t: Tweet = set.leastRetweeted
+        descendingByRetweetAcc(new Cons(t, list), set.remove(t))
       }
-    } catch {
-      case e: NoSuchElementException => ()
     }
 
-    list
+    descendingByRetweetAcc(Nil, this)
   }
 
 
@@ -169,6 +150,9 @@ class Empty extends TweetSet {
    */
   override def mostRetweeted: Tweet = throw new NoSuchElementException
 
+
+  override def leastRetweeted: Tweet = throw new NoSuchElementException
+
   /**
    * The following methods are already implemented
    */
@@ -224,6 +208,18 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
       if (elem.retweets > right.mostRetweeted.retweets) elem else right.mostRetweeted
     } else {
       if (elem.retweets > left.mostRetweeted.retweets) elem else left.mostRetweeted
+    }
+  }
+
+
+  override def leastRetweeted: Tweet = {
+    //TODO: Make nicer
+    if (left.isEmpty && right.isEmpty) {
+      elem
+    } else if (left.isEmpty) {
+      if (elem.retweets < right.mostRetweeted.retweets) elem else right.mostRetweeted
+    } else {
+      if (elem.retweets < left.mostRetweeted.retweets) elem else left.mostRetweeted
     }
   }
 
