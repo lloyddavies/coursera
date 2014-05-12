@@ -198,26 +198,18 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
    * and be implemented in the subclasses?
    */
   override def mostRetweeted: Tweet = {
-    //TODO: Make nicer
-    if (left.isEmpty && right.isEmpty) {
-      elem
-    } else if (left.isEmpty) {
-      if (elem.retweets > right.mostRetweeted.retweets) elem else right.mostRetweeted
-    } else {
-      if (elem.retweets > left.mostRetweeted.retweets) elem else left.mostRetweeted
-    }
+    val e = Some(elem)
+    val l = if (left.isEmpty) None else Some(left.mostRetweeted)
+    val r = if (right.isEmpty) None else Some(right.mostRetweeted)
+    List(e, l, r).flatten.sortBy(-_.retweets).head
   }
 
 
   override def leastRetweeted: Tweet = {
-    //TODO: Make nicer
-    if (left.isEmpty && right.isEmpty) {
-      elem
-    } else if (left.isEmpty) {
-      if (elem.retweets < right.leastRetweeted.retweets) elem else right.leastRetweeted
-    } else {
-      if (elem.retweets < left.leastRetweeted.retweets) elem else left.leastRetweeted
-    }
+    val e = Some(elem)
+    val l = if (left.isEmpty) None else Some(left.leastRetweeted)
+    val r = if (right.isEmpty) None else Some(right.leastRetweeted)
+    List(e, l, r).flatten.sortBy(_.retweets).head
   }
 
   /**
