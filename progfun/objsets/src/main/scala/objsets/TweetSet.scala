@@ -217,9 +217,9 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
     if (left.isEmpty && right.isEmpty) {
       elem
     } else if (left.isEmpty) {
-      if (elem.retweets < right.mostRetweeted.retweets) elem else right.mostRetweeted
+      if (elem.retweets < right.leastRetweeted.retweets) elem else right.leastRetweeted
     } else {
-      if (elem.retweets < left.mostRetweeted.retweets) elem else left.mostRetweeted
+      if (elem.retweets < left.leastRetweeted.retweets) elem else left.leastRetweeted
     }
   }
 
