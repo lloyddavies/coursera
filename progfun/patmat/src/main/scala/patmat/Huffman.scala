@@ -27,13 +27,13 @@ object Huffman {
   // Part 1: Basics
 
   def weight(tree: CodeTree): Int = tree match {
-    case Leaf(c, w) => w
-    case Fork(l, r, c, w) => weight(l) + weight(r)
+    case Leaf(_, w) => w
+    case Fork(_, _, _, w) => w
   }
 
   def chars(tree: CodeTree): List[Char] =  tree match {
-    case Leaf(c, w) => List(c)
-    case Fork(l, r, c, w) => chars(l) ::: chars(r)
+    case Leaf(c, _) => List(c)
+    case Fork(_, _, c, _) => c
   }
 
   def makeCodeTree(left: CodeTree, right: CodeTree) =
@@ -107,14 +107,12 @@ object Huffman {
    * If `trees` is a list of less than two elements, that list should be returned
    * unchanged.
    */
-  def combine(trees: List[CodeTree]): List[CodeTree] = {
-    if (trees.length < 2) trees
-    else {
-      val (left, right) = trees.splitAt(2)
-      val fork = makeCodeTree(left(0), left(1))
-      val (head, tail) = right.span(x => weight(x) < fork.weight)
+  def combine(trees: List[CodeTree]): List[CodeTree] = trees match {
+    case l :: r :: xs =>
+      val fork = makeCodeTree(l, r)
+      val (head, tail) = xs.span(x => weight(x) < fork.weight)
       head ::: fork :: tail
-    }
+    case _ => trees
   }
   /**
    * This function will be called in the following way:
@@ -158,8 +156,8 @@ object Huffman {
    */
   def decode(tree: CodeTree, bits: List[Bit]): List[Char] = {
     def decodef(tree: CodeTree, bits: List[Bit], count: Int): (Char, Int) = tree match {
-      case Leaf(c, w) => (c, count)
-      case Fork(l, r, c, w) =>
+      case Leaf(c, _) => (c, count)
+      case Fork(l, r, _, _) =>
         if (bits.head == 0) decodef(l, bits.tail, count + 1)
         else decodef(r, bits.tail, count + 1)
     }
@@ -200,8 +198,8 @@ object Huffman {
   def encode(tree: CodeTree)(text: List[Char]): List[Bit] = {
     def encodeChar(tree: CodeTree, char: Char): List[Bit] = {
       tree match {
-        case Leaf(c, w) => Nil
-        case Fork(l, r, c, w) =>
+        case Leaf(_, _) => Nil
+        case Fork(l, r, _, _) =>
           if (chars(l).contains(char)) 0 :: encodeChar(l, char)
             else 1 :: encodeChar(r, char)
       }
@@ -223,7 +221,10 @@ object Huffman {
    * the code table `table`.
    */
   def codeBits(table: CodeTable)(char: Char): List[Bit] = {
-    table.find(_._1 == char).get._2
+    table.find(_._1 == char) match {
+      case Some(x) => x._2
+      case None => throw new IllegalArgumentException
+    }
   }
 
   /**
@@ -257,11 +258,6 @@ object Huffman {
    * and then uses it to perform the actual encoding.
    */
   def quickEncode(tree: CodeTree)(text: List[Char]): List[Bit] = {
-    def encodef(table: CodeTable, text: List[Char]): List[Bit] = text match {
-      case Nil => Nil
-      case x :: xs => codeBits(table)(x) ::: encodef(table, xs)
-    }
-
-    encodef(convert(tree), text)
+    text.flatMap(codeBits(convert(tree))(_))
   }
 }
