@@ -121,7 +121,7 @@ object Anagrams {
   def subtract(x: Occurrences, y: Occurrences): Occurrences = {
     y.toMap.foldLeft(x.toMap) { case (occurrences, (c, n)) =>
       occurrences.updated(c, occurrences.getOrElse(c, 0) - n).filter(_._2 > 0)
-    }.toList
+    }.toList.sorted
   }
 
   /** Returns a list of all anagram sentences of the given sentence.
@@ -165,17 +165,13 @@ object Anagrams {
    *  Note: There is only one anagram of an empty sentence.
    */
   def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
-    def contains(x: Occurrences, y: Occurrences) =
-      y.toMap.forall { case (k,v) => x.toMap.getOrElse(k, 0) >= v }
-
     def anagrams(occurrences: Occurrences): List[Sentence] = {
       if (occurrences.isEmpty) List(List())
       else {
         (for {
-          (occ, words) <- dictionaryByOccurrences
-          if contains(occurrences, occ)
-          word <- words
-          rest <- anagrams(subtract(occurrences, occ))
+          combo <- combinations(occurrences)
+          word <- dictionaryByOccurrences.getOrElse(combo, Nil)
+          rest <- anagrams(subtract(occurrences, combo))
         } yield word :: rest).toList
       }
     }
