@@ -96,8 +96,7 @@ trait Solver extends GameDef {
    * position.
    */
   lazy val solution: List[Move] = {
-    println(">> " + pathsToGoal.take(10).toList)
-
-    pathsToGoal.sortBy(_._2.length).head._2.reverse
+    if (pathsToGoal.isEmpty) Nil
+    else pathsToGoal.sortBy(_._2.length).head._2.reverse
   }
 }
