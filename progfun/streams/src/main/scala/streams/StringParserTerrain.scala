@@ -57,7 +57,7 @@ trait StringParserTerrain extends GameDef {
       if (pos.x < 0 || pos.y < 0) false
       else if (levelVector.size <= pos.x) false
       else if (levelVector(pos.x).size <= pos.y) false
-      else levelVector(pos.x)(pos.y) != "-"
+      else levelVector(pos.x)(pos.y) != '-'
     }
 
     func
